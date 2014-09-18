@@ -26,7 +26,8 @@ class silex-server {
         project_name    => 'madebydavid/silex-skeleton-orm',
         target_dir      => '/vagrant/www',
         version         => '2.0',
-        prefer_source   => true,
+        prefer_source   => false,
+        prefer_dist     => true,
         stability       => 'dev',
         keep_vcs        => false,
         dev             => true,
@@ -65,7 +66,7 @@ class silex-server {
  
     file { '/etc/apache2/sites-enabled/000-default':
         ensure          => file,
-        source          => 'puppet:///conf/apache/000-default',
+        source          => 'puppet:///modules/apache/000-default',
         require         => Package['lamp-server^'],
     }
     
