@@ -3,12 +3,12 @@
 
 Vagrant.configure(2) do |config|
 
-    config.vm.box = "hashicorp/precise32" 
+    config.vm.box = "puppetlabs/ubuntu-14.04-32-puppet" 
 
     config.vm.network "forwarded_port", guest: 80, host: 8080
 
     # http://stackoverflow.com/a/14050927/2779152
-    config.vm.provision :shell, :inline => "sudo apt-get update && sudo apt-get install puppet -y"
+    # config.vm.provision :shell, :inline => "sudo apt-get update && sudo apt-get install puppet -y"
 
     config.vm.provision "puppet" do |puppet|
         puppet.module_path = "puppet/modules"

@@ -1,6 +1,10 @@
 
 Exec { path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ] }
 
+class { 'composer': 
+    suhosin_enabled => false,
+}
+
 class silex-server {
 
     # required base packages    
@@ -11,7 +15,6 @@ class silex-server {
     $silexPackages = [
         'lamp-server^',
         'php5-curl',
-        'curl',
         'vim',
         'php5-intl',
     ]
@@ -26,48 +29,47 @@ class silex-server {
         project_name    => 'madebydavid/silex-skeleton-orm',
         target_dir      => '/vagrant/www',
         version         => '2.0',
-        prefer_source   => false,
         prefer_dist     => true,
         stability       => 'dev',
         keep_vcs        => false,
         dev             => true,
+        timeout         => 0,
+        require         => Package['lamp-server^'],
     }
 
-    exec {'apache restart':
-        command         => '/etc/init.d/apache2 restart',
-        require         => [ Package['lamp-server^'], Exec['apache enable modules'] ],
-    }
-  
-    file { '/etc/apache2/httpd.conf':
-        ensure          => file,
-        mode            => 644
-    }
-    service { 'apache2':
-        ensure          => running,
-        enable          => true,
-        subscribe       => File['/etc/apache2/httpd.conf'],
-        require         => Package['lamp-server^'],
-    }
-    file_line { 'EnableSendfile off':
-        ensure          => present,
-        line            => 'EnableSendfile off',
-        path            => '/etc/apache2/httpd.conf',
-        require         => Package['lamp-server^'],
-    }
-   
     file { '/var/www':
         ensure          => 'link',
         owner           => "vagrant",
         group           => "vagrant",
         mode            => 777,
         target          => '/vagrant/www/web',
+        force           => true,
         require         => Package['lamp-server^'],
     }
  
-    file { '/etc/apache2/sites-enabled/000-default':
+    file { '/etc/apache2/sites-available/000-default.conf':
         ensure          => file,
-        source          => 'puppet:///modules/apache/000-default',
+        source          => 'puppet:///modules/apache/000-default.conf',
         require         => Package['lamp-server^'],
+    }
+
+    file { '/etc/apache2/sites-enabled/000-default.conf':
+        ensure          => 'link',
+        source          => '/etc/apache2/sites-available/000-default.conf',
+        require         => [ Package['lamp-server^'], File['/etc/apache2/sites-available/000-default.conf'] ],
+    }
+
+    file { '/etc/apache2/conf-available/disable-send-file.conf':
+        ensure          => file,
+        source          => 'puppet:///modules/apache/disable-send-file.conf',
+        require         => Package['lamp-server^'],
+    }
+
+    file { '/etc/apache2/conf-enabled/disable-send-file.conf':
+        ensure          => 'link',
+        target          => '/etc/apache2/conf-available/disable-send-file.conf',
+        force           => true,
+        require         => File['/etc/apache2/conf-available/disable-send-file.conf'],
     }
     
     exec { 'apache enable modules':
@@ -75,6 +77,15 @@ class silex-server {
         require         => Package['lamp-server^'],
     }
 
+    exec {'apache restart':
+        command         => '/etc/init.d/apache2 restart',
+        require         => [ 
+                                Package['lamp-server^'], 
+                                Exec['apache enable modules'],
+                                File['/etc/apache2/sites-enabled/000-default.conf'],
+                                File['/etc/apache2/conf-enabled/disable-send-file.conf']
+                           ],
+    }
     
 }
  
