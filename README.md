@@ -11,6 +11,7 @@
 ```bash
 $ git clone git@github.com:madebydavid/SilexSkeletonORMVagrant.git my-silex-app
 $ cd my-silex-app
+$ git submodule update --init --recursive
 ```
 
 ### 3. Start the virtual machine, the provisioner will create the project for you
