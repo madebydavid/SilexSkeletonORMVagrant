@@ -72,8 +72,25 @@ class silex-server {
         require         => File['/etc/apache2/conf-available/disable-send-file.conf'],
     }
     
+    exec { 'make apache ssl dir':
+        command         => 'mkdir /etc/apache2/ssl',
+        require         => Package['lamp-server^']
+    }
+
+    file { '/etc/apache2/ssl/apache.crt':
+        ensure          => file,
+        source          => 'puppet:///modules/apache/ssl/apache.crt',
+        require         => Exec['make apache ssl dir'],
+    }
+
+    file { '/etc/apache2/ssl/apache.key':
+        ensure          => file,
+        source          => 'puppet:///modules/apache/ssl/apache.key',
+        require         => Exec['make apache ssl dir'],
+    }
+
     exec { 'apache enable modules':
-        command         => 'a2enmod rewrite',
+        command         => 'a2enmod rewrite ssl',
         require         => Package['lamp-server^'],
     }
 
